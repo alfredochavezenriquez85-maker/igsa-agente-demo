@@ -107,7 +107,7 @@ body::before{
 /* ── MAIN LAYOUT ── */
 .main{
   position:relative;z-index:1;
-  display:grid;grid-template-columns:320px 1fr;
+  display:grid;grid-template-columns:280px 280px 1fr;
   min-height:calc(100vh - 65px);
 }
 
@@ -159,6 +159,71 @@ body::before{
 .sidebar-metric-label{font-size:.65rem;text-transform:uppercase;letter-spacing:1.5px;color:var(--grey);margin-bottom:.5rem}
 .sidebar-metric-value{font-family:var(--font-display);font-size:2.2rem;color:var(--red);font-style:italic}
 .sidebar-metric-sub{font-size:.7rem;color:var(--grey-dim);margin-top:.3rem}
+
+/* ── MIDDLE: PROCESO CON AGENTE ── */
+.middle-col{
+  padding:2rem 1.5rem;
+  border-right:1px solid rgba(255,255,255,.06);
+  background:rgba(10,22,40,.3);
+  overflow-y:auto;
+  max-height:calc(100vh - 65px);
+}
+.middle-col::-webkit-scrollbar{width:3px}
+.middle-col::-webkit-scrollbar-track{background:transparent}
+.middle-col::-webkit-scrollbar-thumb{background:var(--grey-dim);border-radius:2px}
+.agent-step{
+  position:relative;
+  padding:1rem 1rem 1rem 2.2rem;
+  margin-bottom:.5rem;
+  border-radius:10px;
+  background:rgba(34,197,94,.03);
+  border:1px solid rgba(34,197,94,.08);
+  transition:all .6s;
+}
+.agent-step.active{
+  background:rgba(34,197,94,.08);
+  border-color:rgba(34,197,94,.25);
+}
+.agent-step.done{
+  background:rgba(34,197,94,.05);
+  border-color:rgba(34,197,94,.15);
+}
+.agent-step.done .agent-step-label{color:var(--white)}
+.agent-step-num{
+  position:absolute;left:.75rem;top:1.1rem;
+  font-family:var(--font-mono);font-size:.65rem;color:var(--green-dim);font-weight:500;
+}
+.agent-step.done .agent-step-num{color:var(--green)}
+.agent-step-label{font-size:.8rem;color:var(--grey);font-weight:500;line-height:1.4}
+.agent-step-time{
+  display:inline-flex;align-items:center;gap:.3rem;
+  margin-top:.4rem;
+  font-family:var(--font-mono);font-size:.65rem;color:var(--green);
+  opacity:.7;
+}
+.agent-step-time svg{width:10px;height:10px}
+.agent-step-connect{
+  display:flex;align-items:center;gap:.35rem;
+  margin-top:.4rem;
+  font-size:.6rem;color:var(--grey-dim);letter-spacing:.3px;
+}
+.agent-step-connect .connect-badge{
+  padding:.1rem .4rem;border-radius:4px;
+  font-size:.55rem;font-weight:600;letter-spacing:.5px;text-transform:uppercase;
+}
+.connect-crm{background:rgba(45,108,223,.12);color:var(--blue-glow)}
+.connect-email{background:rgba(232,145,45,.12);color:var(--amber-light)}
+.connect-ai{background:rgba(168,85,247,.12);color:#a855f7}
+.connect-webhook{background:rgba(6,182,212,.12);color:#06b6d4}
+
+.middle-metric{
+  margin-top:2rem;padding:1.2rem;
+  border-radius:12px;
+  background:linear-gradient(135deg,rgba(34,197,94,.08),rgba(34,197,94,.03));
+  border:1px solid rgba(34,197,94,.12);
+}
+.middle-metric .sidebar-metric-label{color:var(--grey)}
+.middle-metric .sidebar-metric-value{color:var(--green)}
 
 /* ── RIGHT: AGENT PANEL ── */
 .agent-panel{
@@ -404,18 +469,18 @@ body::before{
 .action-item.checked .action-text{color:var(--white)}
 .action-time{font-family:var(--font-mono);font-size:.6rem;color:var(--grey-dim)}
 
-/* ── BOTTOM BAR ── */
+/* ── RESULTS BAR (below header) ── */
 .bottom-bar{
-  position:fixed;bottom:0;left:0;right:0;z-index:100;
-  padding:.75rem 2.5rem;
-  background:rgba(10,22,40,.9);
+  z-index:99;
+  padding:.6rem 2.5rem;
+  background:rgba(10,22,40,.95);
   backdrop-filter:blur(20px);
-  border-top:1px solid rgba(255,255,255,.06);
+  border-bottom:1px solid rgba(255,255,255,.06);
   display:flex;align-items:center;justify-content:center;gap:3rem;
-  transform:translateY(100%);
-  transition:transform .5s cubic-bezier(.23,1,.32,1);
+  max-height:0;overflow:hidden;opacity:0;
+  transition:all .5s cubic-bezier(.23,1,.32,1);
 }
-.bottom-bar.visible{transform:translateY(0)}
+.bottom-bar.visible{max-height:80px;opacity:1;padding-top:.6rem;padding-bottom:.6rem}
 .metric{text-align:center}
 .metric-label{font-size:.55rem;text-transform:uppercase;letter-spacing:2px;color:var(--grey-dim);margin-bottom:.25rem}
 .metric-value{font-family:var(--font-display);font-size:1.6rem;font-style:italic}
@@ -462,9 +527,10 @@ body::before{
 @keyframes fadeIn{from{opacity:0}to{opacity:1}}
 
 /* ── RESPONSIVE ── */
-@media(max-width:900px){
+@media(max-width:1100px){
   .main{grid-template-columns:1fr}
   .sidebar{display:none}
+  .middle-col{display:none}
   .agent-panel{padding:1.5rem}
 }
 </style>
@@ -505,6 +571,29 @@ body::before{
     </button>
   </div>
 </header>
+
+<!-- ── RESULTS BAR ── -->
+<div class="bottom-bar" id="bottomBar">
+  <div class="metric">
+    <div class="metric-label">Proceso manual</div>
+    <div class="metric-value old">24–48 hrs</div>
+  </div>
+  <div class="metric-divider"></div>
+  <div class="metric">
+    <div class="metric-label">Con Agente IA</div>
+    <div class="metric-value new">~2 min</div>
+  </div>
+  <div class="metric-divider"></div>
+  <div class="metric">
+    <div class="metric-label">Reducción de tiempo</div>
+    <div class="metric-value improvement">99.7%</div>
+  </div>
+  <div class="metric-divider"></div>
+  <div class="metric">
+    <div class="metric-label">Datos enriquecidos</div>
+    <div class="metric-value improvement">+6 campos</div>
+  </div>
+</div>
 
 <!-- ── MAIN ── -->
 <main class="main">
@@ -564,6 +653,94 @@ body::before{
       <div class="sidebar-metric-sub">Desde envío de formulario hasta primer contacto con el prospecto</div>
     </div>
   </aside>
+
+  <!-- MIDDLE: PROCESO CON AGENTE IA -->
+  <div class="middle-col">
+    <div class="sidebar-title">Proceso con Agente IA</div>
+
+    <div class="agent-step" id="as1">
+      <span class="agent-step-num">01</span>
+      <div class="agent-step-label">Formulario recibido automáticamente vía webhook</div>
+      <div class="agent-step-time">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+        Instantáneo
+      </div>
+      <div class="agent-step-connect">
+        <span class="connect-badge connect-webhook">Webhook</span>
+      </div>
+    </div>
+
+    <div class="agent-step" id="as2">
+      <span class="agent-step-num">02</span>
+      <div class="agent-step-label">Agente enriquece datos del prospecto y empresa</div>
+      <div class="agent-step-time">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+        ~15 seg
+      </div>
+      <div class="agent-step-connect">
+        <span class="connect-badge connect-ai">AI Agent</span>
+        <span class="connect-badge connect-crm">CRM</span>
+      </div>
+    </div>
+
+    <div class="agent-step" id="as3">
+      <span class="agent-step-num">03</span>
+      <div class="agent-step-label">Calificación BANT y scoring automático</div>
+      <div class="agent-step-time">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+        ~10 seg
+      </div>
+      <div class="agent-step-connect">
+        <span class="connect-badge connect-ai">AI Agent</span>
+      </div>
+    </div>
+
+    <div class="agent-step" id="as4">
+      <span class="agent-step-num">04</span>
+      <div class="agent-step-label">Asignación inteligente a vendedor óptimo</div>
+      <div class="agent-step-time">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+        ~5 seg
+      </div>
+      <div class="agent-step-connect">
+        <span class="connect-badge connect-ai">AI Agent</span>
+        <span class="connect-badge connect-crm">CRM</span>
+      </div>
+    </div>
+
+    <div class="agent-step" id="as5">
+      <span class="agent-step-num">05</span>
+      <div class="agent-step-label">Brief ejecutivo generado y enviado al vendedor</div>
+      <div class="agent-step-time">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+        ~20 seg
+      </div>
+      <div class="agent-step-connect">
+        <span class="connect-badge connect-ai">AI Agent</span>
+        <span class="connect-badge connect-email">Email</span>
+      </div>
+    </div>
+
+    <div class="agent-step" id="as6">
+      <span class="agent-step-num">06</span>
+      <div class="agent-step-label">CRM actualizado, notificaciones y follow-up agendado</div>
+      <div class="agent-step-time">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+        ~10 seg
+      </div>
+      <div class="agent-step-connect">
+        <span class="connect-badge connect-crm">CRM</span>
+        <span class="connect-badge connect-email">Email</span>
+        <span class="connect-badge connect-webhook">Calendar</span>
+      </div>
+    </div>
+
+    <div class="middle-metric">
+      <div class="sidebar-metric-label">Tiempo total con agente</div>
+      <div class="sidebar-metric-value">~2 min</div>
+      <div class="sidebar-metric-sub">Automático, sin intervención humana hasta el contacto comercial</div>
+    </div>
+  </div>
 
   <!-- RIGHT: AI AGENT PANEL -->
   <div class="agent-panel" id="agentPanel">
@@ -857,29 +1034,6 @@ body::before{
   </div>
 </main>
 
-<!-- ── BOTTOM BAR ── -->
-<div class="bottom-bar" id="bottomBar">
-  <div class="metric">
-    <div class="metric-label">Proceso manual</div>
-    <div class="metric-value old">24–48 hrs</div>
-  </div>
-  <div class="metric-divider"></div>
-  <div class="metric">
-    <div class="metric-label">Con Agente IA</div>
-    <div class="metric-value new">~2 min</div>
-  </div>
-  <div class="metric-divider"></div>
-  <div class="metric">
-    <div class="metric-label">Reducción de tiempo</div>
-    <div class="metric-value improvement">99.7%</div>
-  </div>
-  <div class="metric-divider"></div>
-  <div class="metric">
-    <div class="metric-label">Datos enriquecidos</div>
-    <div class="metric-value improvement">+6 campos</div>
-  </div>
-</div>
-
 <script>
 // ═══════════════════════════════════════════
 // DEMO ORCHESTRATOR
@@ -929,6 +1083,16 @@ function activateManualStep(n) {
   }
 }
 
+function activateAgentStep(n) {
+  for (let i = 1; i <= 6; i++) {
+    const as = document.getElementById('as' + i);
+    if (!as) continue;
+    as.classList.remove('active', 'done');
+    if (i < n) as.classList.add('done');
+    if (i === n) as.classList.add('active');
+  }
+}
+
 function animateScore(target) {
   let current = 0;
   const el = document.getElementById('scoreNum');
@@ -953,6 +1117,7 @@ async function startDemo() {
   // ── STEP 1: DETECTION ──
   await wait(600);
   activateManualStep(1);
+  activateAgentStep(1);
   const s1 = document.getElementById('step1');
   s1.classList.add('visible');
   setStatus('step1Status', 'running');
@@ -974,6 +1139,7 @@ async function startDemo() {
   setStatus('step1Status', 'done');
   setCardState('step1', 'complete');
   activateManualStep(2);
+  activateAgentStep(2);
 
   // ── STEP 2: ENRICHMENT ──
   await wait(500);
@@ -1009,6 +1175,7 @@ async function startDemo() {
   setStatus('step2Status', 'done');
   setCardState('step2', 'complete');
   activateManualStep(3);
+  activateAgentStep(3);
 
   // ── STEP 3: SCORING ──
   await wait(500);
@@ -1063,6 +1230,7 @@ async function startDemo() {
   setStatus('step3Status', 'done');
   setCardState('step3', 'complete');
   activateManualStep(4);
+  activateAgentStep(4);
 
   // ── STEP 4: ROUTING ──
   await wait(500);
@@ -1088,6 +1256,7 @@ async function startDemo() {
   setStatus('step4Status', 'done');
   setCardState('step4', 'complete');
   activateManualStep(5);
+  activateAgentStep(5);
 
   // ── STEP 5: BRIEF ──
   await wait(500);
@@ -1110,6 +1279,7 @@ async function startDemo() {
   await wait(1000);
   setStatus('step5Status', 'done');
   setCardState('step5', 'complete');
+  activateAgentStep(6);
 
   // ── STEP 6: ACTIONS ──
   await wait(500);
@@ -1130,6 +1300,11 @@ async function startDemo() {
   await wait(600);
   setStatus('step6Status', 'done');
   setCardState('step6', 'complete');
+  // Mark all agent steps as done
+  for (let i = 1; i <= 6; i++) {
+    const as = document.getElementById('as' + i);
+    if (as) { as.classList.remove('active'); as.classList.add('done'); }
+  }
 
   // ── SHOW BOTTOM BAR ──
   await wait(400);
@@ -1196,6 +1371,11 @@ function restartDemo() {
 
   // Reset manual steps
   document.querySelectorAll('.manual-step').forEach(el => {
+    el.classList.remove('active', 'done');
+  });
+
+  // Reset agent steps (middle column)
+  document.querySelectorAll('.agent-step').forEach(el => {
     el.classList.remove('active', 'done');
   });
 
