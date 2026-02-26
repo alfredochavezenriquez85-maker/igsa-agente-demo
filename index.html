@@ -1,0 +1,1213 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>IGSA — Agente IA: Alta de Prospecto</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=JetBrains+Mono:wght@300;400;500&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --navy:#0a1628;
+  --navy-light:#111d33;
+  --navy-mid:#162340;
+  --navy-surface:#1a2a4a;
+  --blue-accent:#2d6cdf;
+  --blue-glow:#3b82f6;
+  --amber:#e8912d;
+  --amber-light:#f5a623;
+  --amber-glow:#ffbe4d;
+  --green:#22c55e;
+  --green-dim:#166534;
+  --red:#ef4444;
+  --red-dim:#7f1d1d;
+  --white:#f0f2f8;
+  --grey:#8892a8;
+  --grey-dim:#4a5568;
+  --font-body:'DM Sans',system-ui,sans-serif;
+  --font-mono:'JetBrains Mono',monospace;
+  --font-display:'Instrument Serif',Georgia,serif;
+}
+html{font-size:15px;scroll-behavior:smooth}
+body{
+  font-family:var(--font-body);
+  background:var(--navy);
+  color:var(--white);
+  min-height:100vh;
+  overflow-x:hidden;
+  -webkit-font-smoothing:antialiased;
+}
+
+/* ── GRAIN OVERLAY ── */
+body::before{
+  content:'';position:fixed;inset:0;z-index:9999;pointer-events:none;
+  opacity:.03;
+  background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+/* ── AMBIENT GLOW ── */
+.ambient{
+  position:fixed;top:-30%;left:-10%;width:60%;height:60%;
+  background:radial-gradient(ellipse,rgba(45,108,223,.08) 0%,transparent 70%);
+  pointer-events:none;z-index:0;
+}
+.ambient-2{
+  position:fixed;bottom:-20%;right:-10%;width:50%;height:50%;
+  background:radial-gradient(ellipse,rgba(232,145,45,.05) 0%,transparent 70%);
+  pointer-events:none;z-index:0;
+}
+
+/* ── HEADER ── */
+.header{
+  position:sticky;top:0;z-index:100;
+  display:flex;align-items:center;justify-content:space-between;
+  padding:1rem 2.5rem;
+  background:rgba(10,22,40,.85);
+  backdrop-filter:blur(20px);
+  border-bottom:1px solid rgba(255,255,255,.06);
+}
+.logo-area{display:flex;align-items:center;gap:.75rem}
+.logo-mark{
+  width:42px;height:42px;
+  background:linear-gradient(135deg,var(--amber),var(--amber-light));
+  border-radius:8px;display:flex;align-items:center;justify-content:center;
+  font-family:var(--font-body);font-weight:700;font-size:1rem;color:var(--navy);
+  letter-spacing:-.5px;
+}
+.logo-text{
+  font-family:var(--font-display);font-size:1.4rem;color:var(--white);
+  letter-spacing:.5px;
+}
+.logo-text span{color:var(--grey);font-size:.75rem;font-family:var(--font-body);
+  font-style:normal;display:block;letter-spacing:1px;text-transform:uppercase;margin-top:-2px}
+.header-badge{
+  display:flex;align-items:center;gap:.5rem;
+  padding:.4rem 1rem;border-radius:100px;
+  background:rgba(34,197,94,.1);border:1px solid rgba(34,197,94,.25);
+  font-size:.7rem;font-weight:500;color:var(--green);text-transform:uppercase;letter-spacing:1px;
+}
+.header-badge::before{
+  content:'';width:6px;height:6px;background:var(--green);border-radius:50%;
+  animation:pulse-dot 2s infinite;
+}
+@keyframes pulse-dot{0%,100%{opacity:1}50%{opacity:.3}}
+
+.header-right{display:flex;align-items:center;gap:1.5rem}
+.btn-restart{
+  display:flex;align-items:center;gap:.5rem;
+  padding:.5rem 1.2rem;border-radius:8px;
+  background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);
+  color:var(--white);font-family:var(--font-body);font-size:.8rem;font-weight:500;
+  cursor:pointer;transition:all .2s;
+}
+.btn-restart:hover{background:rgba(255,255,255,.12);border-color:rgba(255,255,255,.2)}
+.btn-restart svg{width:14px;height:14px}
+
+/* ── MAIN LAYOUT ── */
+.main{
+  position:relative;z-index:1;
+  display:grid;grid-template-columns:320px 1fr;
+  min-height:calc(100vh - 65px);
+}
+
+/* ── LEFT: PROCESO ACTUAL ── */
+.sidebar{
+  padding:2rem 1.5rem;
+  border-right:1px solid rgba(255,255,255,.06);
+  background:rgba(10,22,40,.5);
+}
+.sidebar-title{
+  font-size:.65rem;font-weight:600;text-transform:uppercase;letter-spacing:2px;
+  color:var(--grey);margin-bottom:1.5rem;
+  display:flex;align-items:center;gap:.5rem;
+}
+.sidebar-title::before{content:'';width:18px;height:2px;background:var(--grey-dim);border-radius:1px}
+.manual-step{
+  position:relative;
+  padding:1rem 1rem 1rem 2.2rem;
+  margin-bottom:.5rem;
+  border-radius:10px;
+  background:rgba(255,255,255,.02);
+  border:1px solid rgba(255,255,255,.04);
+  transition:all .6s;
+}
+.manual-step.active{
+  background:rgba(239,68,68,.06);
+  border-color:rgba(239,68,68,.15);
+}
+.manual-step.done{opacity:.35}
+.manual-step-num{
+  position:absolute;left:.75rem;top:1.1rem;
+  font-family:var(--font-mono);font-size:.65rem;color:var(--grey-dim);font-weight:500;
+}
+.manual-step-label{font-size:.8rem;color:var(--grey);font-weight:500;line-height:1.4}
+.manual-step-time{
+  display:inline-flex;align-items:center;gap:.3rem;
+  margin-top:.4rem;
+  font-family:var(--font-mono);font-size:.65rem;color:var(--red);
+  opacity:.7;
+}
+.manual-step-time svg{width:10px;height:10px}
+
+.sidebar-metric{
+  margin-top:2rem;padding:1.2rem;
+  border-radius:12px;
+  background:linear-gradient(135deg,rgba(239,68,68,.08),rgba(239,68,68,.03));
+  border:1px solid rgba(239,68,68,.12);
+}
+.sidebar-metric-label{font-size:.65rem;text-transform:uppercase;letter-spacing:1.5px;color:var(--grey);margin-bottom:.5rem}
+.sidebar-metric-value{font-family:var(--font-display);font-size:2.2rem;color:var(--red);font-style:italic}
+.sidebar-metric-sub{font-size:.7rem;color:var(--grey-dim);margin-top:.3rem}
+
+/* ── RIGHT: AGENT PANEL ── */
+.agent-panel{
+  padding:2rem 2.5rem;
+  overflow-y:auto;
+  max-height:calc(100vh - 65px);
+}
+.agent-panel::-webkit-scrollbar{width:4px}
+.agent-panel::-webkit-scrollbar-track{background:transparent}
+.agent-panel::-webkit-scrollbar-thumb{background:var(--grey-dim);border-radius:2px}
+
+/* ── STEP CARDS ── */
+.step-card{
+  margin-bottom:1.5rem;
+  border-radius:14px;
+  background:var(--navy-light);
+  border:1px solid rgba(255,255,255,.06);
+  overflow:hidden;
+  opacity:0;
+  transform:translateY(20px);
+  transition:all .5s cubic-bezier(.23,1,.32,1);
+}
+.step-card.visible{opacity:1;transform:translateY(0)}
+.step-card.processing{border-color:rgba(45,108,223,.3);box-shadow:0 0 30px rgba(45,108,223,.08)}
+.step-card.complete{border-color:rgba(34,197,94,.15)}
+
+.step-header{
+  display:flex;align-items:center;gap:.75rem;
+  padding:1rem 1.25rem;
+  border-bottom:1px solid rgba(255,255,255,.04);
+}
+.step-icon{
+  width:32px;height:32px;border-radius:8px;
+  display:flex;align-items:center;justify-content:center;
+  font-size:.85rem;flex-shrink:0;
+}
+.step-icon.detecting{background:rgba(45,108,223,.15);color:var(--blue-glow)}
+.step-icon.enriching{background:rgba(232,145,45,.15);color:var(--amber)}
+.step-icon.scoring{background:rgba(168,85,247,.15);color:#a855f7}
+.step-icon.routing{background:rgba(6,182,212,.15);color:#06b6d4}
+.step-icon.brief{background:rgba(34,197,94,.15);color:var(--green)}
+.step-icon.actions{background:rgba(245,158,11,.15);color:var(--amber-light)}
+.step-num{
+  font-family:var(--font-mono);font-size:.6rem;color:var(--grey-dim);
+  letter-spacing:1px;text-transform:uppercase;
+}
+.step-title{font-size:.9rem;font-weight:600;flex:1}
+.step-status{
+  font-family:var(--font-mono);font-size:.6rem;
+  padding:.25rem .6rem;border-radius:100px;
+  letter-spacing:.5px;text-transform:uppercase;
+}
+.step-status.waiting{color:var(--grey-dim);background:rgba(255,255,255,.04)}
+.step-status.running{color:var(--blue-glow);background:rgba(45,108,223,.12);animation:status-pulse 1.5s infinite}
+.step-status.done{color:var(--green);background:rgba(34,197,94,.1)}
+@keyframes status-pulse{0%,100%{opacity:1}50%{opacity:.5}}
+
+.step-body{padding:1.25rem}
+
+/* ── TERMINAL / AI THINKING ── */
+.terminal{
+  background:rgba(0,0,0,.3);
+  border-radius:8px;
+  padding:.75rem 1rem;
+  font-family:var(--font-mono);
+  font-size:.72rem;
+  line-height:1.8;
+  color:var(--grey);
+  overflow:hidden;
+  margin-bottom:.75rem;
+}
+.terminal-line{
+  opacity:0;transform:translateX(-5px);
+  transition:all .3s;
+}
+.terminal-line.show{opacity:1;transform:translateX(0)}
+.terminal-line .cmd{color:var(--blue-glow)}
+.terminal-line .ok{color:var(--green)}
+.terminal-line .warn{color:var(--amber)}
+.terminal-line .val{color:var(--amber-light)}
+.terminal-line .hl{color:var(--white);font-weight:500}
+.cursor-blink{
+  display:inline-block;width:7px;height:14px;
+  background:var(--blue-glow);vertical-align:middle;
+  animation:blink .8s step-end infinite;margin-left:3px;
+}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:0}}
+
+/* ── FORM CARD (incoming submission) ── */
+.form-card{
+  background:var(--navy-mid);
+  border-radius:10px;
+  padding:1rem 1.25rem;
+  border:1px solid rgba(255,255,255,.06);
+}
+.form-row{
+  display:flex;justify-content:space-between;align-items:flex-start;
+  padding:.45rem 0;
+  border-bottom:1px solid rgba(255,255,255,.03);
+  font-size:.78rem;
+}
+.form-row:last-child{border-bottom:none}
+.form-label{color:var(--grey);font-weight:500;min-width:120px;flex-shrink:0}
+.form-value{color:var(--white);text-align:right;font-weight:400}
+
+/* ── ENRICHMENT RESULTS ── */
+.enrich-grid{display:grid;grid-template-columns:1fr 1fr;gap:.75rem;margin-top:.75rem}
+.enrich-card{
+  padding:.85rem 1rem;border-radius:10px;
+  background:rgba(255,255,255,.03);
+  border:1px solid rgba(255,255,255,.05);
+  opacity:0;transform:scale(.95);
+  transition:all .4s cubic-bezier(.23,1,.32,1);
+}
+.enrich-card.show{opacity:1;transform:scale(1)}
+.enrich-card-icon{font-size:1.1rem;margin-bottom:.4rem}
+.enrich-card-label{font-size:.6rem;text-transform:uppercase;letter-spacing:1.5px;color:var(--grey);margin-bottom:.3rem}
+.enrich-card-value{font-size:.85rem;font-weight:600;color:var(--white);line-height:1.3}
+.enrich-card-sub{font-size:.68rem;color:var(--grey);margin-top:.2rem}
+
+/* ── SCORE ── */
+.score-container{display:flex;align-items:center;gap:2rem;margin-top:.75rem}
+.score-ring{position:relative;width:100px;height:100px;flex-shrink:0}
+.score-ring svg{width:100%;height:100%;transform:rotate(-90deg)}
+.score-ring circle{fill:none;stroke-width:6;stroke-linecap:round}
+.score-ring .bg{stroke:rgba(255,255,255,.06)}
+.score-ring .fg{stroke:var(--amber);stroke-dasharray:283;stroke-dashoffset:283;transition:stroke-dashoffset 1.5s cubic-bezier(.23,1,.32,1)}
+.score-ring .fg.animate{stroke-dashoffset:37}
+.score-number{
+  position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;
+}
+.score-number .big{font-family:var(--font-display);font-size:2rem;color:var(--amber);font-style:italic}
+.score-number .small{font-size:.55rem;text-transform:uppercase;letter-spacing:1.5px;color:var(--grey);margin-top:-2px}
+.score-details{flex:1}
+.bant-row{
+  display:flex;align-items:center;gap:.75rem;
+  padding:.4rem 0;
+  font-size:.78rem;
+  opacity:0;transform:translateX(10px);
+  transition:all .35s;
+}
+.bant-row.show{opacity:1;transform:translateX(0)}
+.bant-label{color:var(--grey);width:80px;font-weight:500}
+.bant-bar{flex:1;height:4px;background:rgba(255,255,255,.06);border-radius:2px;overflow:hidden}
+.bant-fill{height:100%;border-radius:2px;width:0;transition:width 1s cubic-bezier(.23,1,.32,1)}
+.bant-fill.budget{background:var(--amber)}
+.bant-fill.authority{background:var(--blue-glow)}
+.bant-fill.need{background:var(--green)}
+.bant-fill.timeline{background:#a855f7}
+.bant-val{font-family:var(--font-mono);font-size:.65rem;color:var(--grey);width:30px;text-align:right}
+
+.tags{display:flex;flex-wrap:wrap;gap:.4rem;margin-top:.75rem}
+.tag{
+  padding:.25rem .65rem;border-radius:100px;
+  font-size:.65rem;font-weight:500;letter-spacing:.3px;
+  background:rgba(232,145,45,.1);border:1px solid rgba(232,145,45,.2);color:var(--amber-light);
+  opacity:0;transform:scale(.8);transition:all .3s;
+}
+.tag.show{opacity:1;transform:scale(1)}
+
+/* ── ROUTING ── */
+.seller-card{
+  display:flex;align-items:center;gap:1rem;
+  padding:1rem;border-radius:10px;
+  background:rgba(255,255,255,.03);
+  border:1px solid rgba(255,255,255,.05);
+  margin-top:.75rem;
+  opacity:0;transform:translateY(10px);
+  transition:all .4s;
+}
+.seller-card.show{opacity:1;transform:translateY(0)}
+.seller-card.recommended{
+  background:rgba(34,197,94,.06);
+  border-color:rgba(34,197,94,.2);
+}
+.seller-avatar{
+  width:44px;height:44px;border-radius:10px;
+  display:flex;align-items:center;justify-content:center;
+  font-size:1.1rem;font-weight:700;
+  background:linear-gradient(135deg,var(--navy-surface),var(--navy-mid));
+  color:var(--grey);flex-shrink:0;
+}
+.seller-card.recommended .seller-avatar{
+  background:linear-gradient(135deg,var(--green-dim),rgba(34,197,94,.2));
+  color:var(--green);
+}
+.seller-info{flex:1}
+.seller-name{font-size:.85rem;font-weight:600;margin-bottom:.15rem}
+.seller-detail{font-size:.7rem;color:var(--grey);line-height:1.4}
+.seller-badge{
+  padding:.2rem .55rem;border-radius:6px;
+  font-size:.6rem;font-weight:600;letter-spacing:.5px;text-transform:uppercase;
+}
+.seller-card.recommended .seller-badge{background:rgba(34,197,94,.15);color:var(--green)}
+.seller-card:not(.recommended) .seller-badge{background:rgba(255,255,255,.05);color:var(--grey)}
+
+/* ── BRIEF ── */
+.brief-doc{
+  background:rgba(255,255,255,.025);
+  border:1px solid rgba(255,255,255,.06);
+  border-radius:10px;
+  padding:1.25rem;
+  margin-top:.75rem;
+  opacity:0;transition:all .5s;
+}
+.brief-doc.show{opacity:1}
+.brief-section{margin-bottom:1rem}
+.brief-section:last-child{margin-bottom:0}
+.brief-section-title{
+  font-size:.6rem;text-transform:uppercase;letter-spacing:2px;
+  color:var(--amber);font-weight:600;margin-bottom:.5rem;
+  display:flex;align-items:center;gap:.4rem;
+}
+.brief-section-title::before{content:'';width:10px;height:2px;background:var(--amber);border-radius:1px}
+.brief-text{font-size:.78rem;color:var(--grey);line-height:1.6}
+.brief-text strong{color:var(--white);font-weight:600}
+.brief-product{
+  display:inline-flex;align-items:center;gap:.3rem;
+  padding:.2rem .6rem;border-radius:6px;margin:.2rem;
+  background:rgba(45,108,223,.1);border:1px solid rgba(45,108,223,.15);
+  font-size:.7rem;color:var(--blue-glow);
+}
+
+/* ── ACTIONS ── */
+.action-list{margin-top:.75rem}
+.action-item{
+  display:flex;align-items:center;gap:.75rem;
+  padding:.65rem .75rem;margin-bottom:.4rem;
+  border-radius:8px;
+  background:rgba(255,255,255,.02);
+  opacity:0;transform:translateX(-10px);
+  transition:all .4s;
+}
+.action-item.show{opacity:1;transform:translateX(0)}
+.action-check{
+  width:22px;height:22px;border-radius:6px;
+  background:rgba(34,197,94,.15);
+  display:flex;align-items:center;justify-content:center;flex-shrink:0;
+}
+.action-check svg{width:12px;height:12px;color:var(--green);opacity:0;transform:scale(0);transition:all .3s}
+.action-item.checked .action-check svg{opacity:1;transform:scale(1)}
+.action-text{font-size:.8rem;color:var(--grey);flex:1}
+.action-item.checked .action-text{color:var(--white)}
+.action-time{font-family:var(--font-mono);font-size:.6rem;color:var(--grey-dim)}
+
+/* ── BOTTOM BAR ── */
+.bottom-bar{
+  position:fixed;bottom:0;left:0;right:0;z-index:100;
+  padding:.75rem 2.5rem;
+  background:rgba(10,22,40,.9);
+  backdrop-filter:blur(20px);
+  border-top:1px solid rgba(255,255,255,.06);
+  display:flex;align-items:center;justify-content:center;gap:3rem;
+  transform:translateY(100%);
+  transition:transform .5s cubic-bezier(.23,1,.32,1);
+}
+.bottom-bar.visible{transform:translateY(0)}
+.metric{text-align:center}
+.metric-label{font-size:.55rem;text-transform:uppercase;letter-spacing:2px;color:var(--grey-dim);margin-bottom:.25rem}
+.metric-value{font-family:var(--font-display);font-size:1.6rem;font-style:italic}
+.metric-value.old{color:var(--red)}
+.metric-value.new{color:var(--green)}
+.metric-value.improvement{color:var(--amber)}
+.metric-divider{width:1px;height:40px;background:rgba(255,255,255,.08)}
+
+/* ── START OVERLAY ── */
+.start-overlay{
+  position:fixed;inset:0;z-index:200;
+  display:flex;align-items:center;justify-content:center;
+  background:var(--navy);
+  transition:opacity .6s,visibility .6s;
+}
+.start-overlay.hidden{opacity:0;visibility:hidden;pointer-events:none}
+.start-content{text-align:center;max-width:500px}
+.start-logo{
+  width:64px;height:64px;margin:0 auto 1.5rem;
+  background:linear-gradient(135deg,var(--amber),var(--amber-light));
+  border-radius:16px;display:flex;align-items:center;justify-content:center;
+  font-family:var(--font-body);font-weight:700;font-size:1.3rem;color:var(--navy);
+}
+.start-title{
+  font-family:var(--font-display);font-size:2.5rem;font-style:italic;
+  color:var(--white);margin-bottom:.5rem;line-height:1.2;
+}
+.start-sub{color:var(--grey);font-size:.9rem;margin-bottom:2.5rem;line-height:1.5}
+.btn-start{
+  display:inline-flex;align-items:center;gap:.75rem;
+  padding:.85rem 2.5rem;border-radius:12px;
+  background:linear-gradient(135deg,var(--amber),var(--amber-light));
+  color:var(--navy);font-family:var(--font-body);font-weight:700;font-size:.95rem;
+  border:none;cursor:pointer;
+  transition:all .3s;
+  box-shadow:0 4px 25px rgba(232,145,45,.25);
+}
+.btn-start:hover{transform:translateY(-2px);box-shadow:0 8px 35px rgba(232,145,45,.35)}
+.btn-start svg{width:18px;height:18px}
+.start-note{margin-top:1.5rem;font-size:.7rem;color:var(--grey-dim);letter-spacing:.5px}
+
+/* ── ANIMATIONS ── */
+@keyframes slideUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+
+/* ── RESPONSIVE ── */
+@media(max-width:900px){
+  .main{grid-template-columns:1fr}
+  .sidebar{display:none}
+  .agent-panel{padding:1.5rem}
+}
+</style>
+</head>
+<body>
+
+<div class="ambient"></div>
+<div class="ambient-2"></div>
+
+<!-- ── START OVERLAY ── -->
+<div class="start-overlay" id="startOverlay">
+  <div class="start-content">
+    <div class="start-logo">IGSA</div>
+    <div class="start-title">Agente IA<br>Alta de Prospecto</div>
+    <div class="start-sub">Demostración interactiva de cómo la inteligencia artificial transforma el proceso de registro y calificación de prospectos comerciales.</div>
+    <button class="btn-start" onclick="startDemo()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+      Iniciar Demostración
+    </button>
+    <div class="start-note">Prototipo conceptual — LCG Consulting × IGSA</div>
+  </div>
+</div>
+
+<!-- ── HEADER ── -->
+<header class="header">
+  <div class="logo-area">
+    <div class="logo-mark">IGSA</div>
+    <div class="logo-text">
+      Agente Comercial IA
+      <span>Sistema de Alta de Prospectos</span>
+    </div>
+  </div>
+  <div class="header-right">
+    <div class="header-badge" id="agentStatus">Agente en espera</div>
+    <button class="btn-restart" onclick="restartDemo()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+      Reproducir
+    </button>
+  </div>
+</header>
+
+<!-- ── MAIN ── -->
+<main class="main">
+
+  <!-- LEFT SIDEBAR -->
+  <aside class="sidebar">
+    <div class="sidebar-title">Proceso Manual Actual</div>
+
+    <div class="manual-step" id="ms1">
+      <span class="manual-step-num">01</span>
+      <div class="manual-step-label">Cliente llena formulario en igsa.com.mx/contacto</div>
+      <div class="manual-step-time">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+        Inmediato
+      </div>
+    </div>
+
+    <div class="manual-step" id="ms2">
+      <span class="manual-step-num">02</span>
+      <div class="manual-step-label">Asistente descarga datos y los captura en Excel</div>
+      <div class="manual-step-time">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+        2 — 8 hrs
+      </div>
+    </div>
+
+    <div class="manual-step" id="ms3">
+      <span class="manual-step-num">03</span>
+      <div class="manual-step-label">Envío de Excel al Director Comercial por correo</div>
+      <div class="manual-step-time">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+        4 — 12 hrs
+      </div>
+    </div>
+
+    <div class="manual-step" id="ms4">
+      <span class="manual-step-num">04</span>
+      <div class="manual-step-label">Director Comercial revisa, califica y asigna a vendedor</div>
+      <div class="manual-step-time">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+        8 — 24 hrs
+      </div>
+    </div>
+
+    <div class="manual-step" id="ms5">
+      <span class="manual-step-num">05</span>
+      <div class="manual-step-label">Vendedor recibe datos y realiza primer contacto</div>
+      <div class="manual-step-time">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+        12 — 48 hrs
+      </div>
+    </div>
+
+    <div class="sidebar-metric">
+      <div class="sidebar-metric-label">Tiempo total promedio</div>
+      <div class="sidebar-metric-value">24–48 hrs</div>
+      <div class="sidebar-metric-sub">Desde envío de formulario hasta primer contacto con el prospecto</div>
+    </div>
+  </aside>
+
+  <!-- RIGHT: AI AGENT PANEL -->
+  <div class="agent-panel" id="agentPanel">
+
+    <!-- STEP 1: DETECTION -->
+    <div class="step-card" id="step1">
+      <div class="step-header">
+        <div class="step-icon detecting">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+        </div>
+        <div>
+          <div class="step-num">Paso 01</div>
+          <div class="step-title">Nuevo Formulario Detectado</div>
+        </div>
+        <div class="step-status waiting" id="step1Status">Esperando</div>
+      </div>
+      <div class="step-body">
+        <div class="terminal" id="term1">
+          <div class="terminal-line" id="t1l1"><span class="cmd">▸</span> Webhook recibido desde igsa.com.mx/contacto</div>
+          <div class="terminal-line" id="t1l2"><span class="cmd">▸</span> Tipo: <span class="val">Cotización</span> — Formulario completo detectado</div>
+          <div class="terminal-line" id="t1l3"><span class="ok">✓</span> Datos validados — procesando con Agente IA...</div>
+        </div>
+        <div class="form-card" id="formCard" style="opacity:0;transform:translateY(10px);transition:all .5s">
+          <div class="form-row"><span class="form-label">Nombre</span><span class="form-value">Carlos Mendoza Ruiz</span></div>
+          <div class="form-row"><span class="form-label">Empresa</span><span class="form-value">Grupo Cementos del Norte S.A. de C.V.</span></div>
+          <div class="form-row"><span class="form-label">Email</span><span class="form-value">c.mendoza@gcnorte.com.mx</span></div>
+          <div class="form-row"><span class="form-label">Teléfono</span><span class="form-value">+52 818 234 5678</span></div>
+          <div class="form-row"><span class="form-label">Sector</span><span class="form-value">Construcción / Cementero</span></div>
+          <div class="form-row"><span class="form-label">Asunto</span><span class="form-value">Cotización</span></div>
+          <div class="form-row"><span class="form-label">Marca</span><span class="form-value">Volvo Penta</span></div>
+          <div class="form-row"><span class="form-label">Potencia</span><span class="form-value">800 — 1,600 kW</span></div>
+          <div class="form-row"><span class="form-label">Contacto pref.</span><span class="form-value">Correo electrónico</span></div>
+          <div class="form-row"><span class="form-label">Mensaje</span><span class="form-value" style="max-width:280px;text-align:right">"Requerimos cotización de planta de emergencia para nuestra nueva línea de producción en Monterrey. Operación 24/7."</span></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- STEP 2: ENRICHMENT -->
+    <div class="step-card" id="step2">
+      <div class="step-header">
+        <div class="step-icon enriching">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        </div>
+        <div>
+          <div class="step-num">Paso 02</div>
+          <div class="step-title">Enriquecimiento Automático</div>
+        </div>
+        <div class="step-status waiting" id="step2Status">Esperando</div>
+      </div>
+      <div class="step-body">
+        <div class="terminal" id="term2">
+          <div class="terminal-line" id="t2l1"><span class="cmd">▸</span> Buscando "Grupo Cementos del Norte" en fuentes públicas...</div>
+          <div class="terminal-line" id="t2l2"><span class="ok">✓</span> Empresa encontrada — <span class="val">DUNS registrado</span></div>
+          <div class="terminal-line" id="t2l3"><span class="cmd">▸</span> Consultando CRM interno... <span class="warn">⚠ No encontrado en CRM</span></div>
+          <div class="terminal-line" id="t2l4"><span class="cmd">▸</span> Verificando perfil de contacto en LinkedIn...</div>
+          <div class="terminal-line" id="t2l5"><span class="ok">✓</span> Perfil identificado — <span class="hl">Director de Operaciones (C-Level)</span></div>
+          <div class="terminal-line" id="t2l6"><span class="ok">✓</span> Enriquecimiento completo — <span class="val">6 campos nuevos</span></div>
+        </div>
+        <div class="enrich-grid" id="enrichGrid">
+          <div class="enrich-card" id="ec1">
+            <div class="enrich-card-icon">🏢</div>
+            <div class="enrich-card-label">Empresa</div>
+            <div class="enrich-card-value">Grupo Cementos del Norte</div>
+            <div class="enrich-card-sub">Fundada 1985 · Monterrey, N.L.</div>
+          </div>
+          <div class="enrich-card" id="ec2">
+            <div class="enrich-card-icon">📊</div>
+            <div class="enrich-card-label">Facturación estimada</div>
+            <div class="enrich-card-value">$2,800 MDP anuales</div>
+            <div class="enrich-card-sub">+450 empleados · 3 plantas</div>
+          </div>
+          <div class="enrich-card" id="ec3">
+            <div class="enrich-card-icon">👤</div>
+            <div class="enrich-card-label">Contacto</div>
+            <div class="enrich-card-value">Dir. de Operaciones</div>
+            <div class="enrich-card-sub">Decisor nivel C-Level · 12 años en la empresa</div>
+          </div>
+          <div class="enrich-card" id="ec4">
+            <div class="enrich-card-icon">🔍</div>
+            <div class="enrich-card-label">Estado en CRM</div>
+            <div class="enrich-card-value">Nuevo prospecto</div>
+            <div class="enrich-card-sub">Sin historial previo · Sin cotizaciones</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- STEP 3: SCORING -->
+    <div class="step-card" id="step3">
+      <div class="step-header">
+        <div class="step-icon scoring">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20V10"/><path d="M18 20V4"/><path d="M6 20v-4"/></svg>
+        </div>
+        <div>
+          <div class="step-num">Paso 03</div>
+          <div class="step-title">Calificación & Scoring BANT</div>
+        </div>
+        <div class="step-status waiting" id="step3Status">Esperando</div>
+      </div>
+      <div class="step-body">
+        <div class="terminal" id="term3">
+          <div class="terminal-line" id="t3l1"><span class="cmd">▸</span> Ejecutando modelo de scoring BANT...</div>
+          <div class="terminal-line" id="t3l2"><span class="cmd">▸</span> Budget: empresa grande, facturación >$2,500 MDP → <span class="val">90/100</span></div>
+          <div class="terminal-line" id="t3l3"><span class="cmd">▸</span> Authority: Director de Operaciones, decisor → <span class="val">95/100</span></div>
+          <div class="terminal-line" id="t3l4"><span class="cmd">▸</span> Need: planta 800-1600kW, operación 24/7 → <span class="val">85/100</span></div>
+          <div class="terminal-line" id="t3l5"><span class="cmd">▸</span> Timeline: "nueva línea de producción" implica urgencia → <span class="val">78/100</span></div>
+          <div class="terminal-line" id="t3l6"><span class="ok">✓</span> Score final: <span class="hl">87/100 — ALTA PRIORIDAD</span></div>
+        </div>
+        <div class="score-container" id="scoreContainer" style="opacity:0;transition:opacity .5s">
+          <div class="score-ring">
+            <svg viewBox="0 0 100 100">
+              <circle class="bg" cx="50" cy="50" r="45"/>
+              <circle class="fg" id="scoreCircle" cx="50" cy="50" r="45"/>
+            </svg>
+            <div class="score-number">
+              <span class="big" id="scoreNum">0</span>
+              <span class="small">de 100</span>
+            </div>
+          </div>
+          <div class="score-details">
+            <div class="bant-row" id="bant1">
+              <span class="bant-label">Budget</span>
+              <div class="bant-bar"><div class="bant-fill budget" id="bantFill1"></div></div>
+              <span class="bant-val">90</span>
+            </div>
+            <div class="bant-row" id="bant2">
+              <span class="bant-label">Authority</span>
+              <div class="bant-bar"><div class="bant-fill authority" id="bantFill2"></div></div>
+              <span class="bant-val">95</span>
+            </div>
+            <div class="bant-row" id="bant3">
+              <span class="bant-label">Need</span>
+              <div class="bant-bar"><div class="bant-fill need" id="bantFill3"></div></div>
+              <span class="bant-val">85</span>
+            </div>
+            <div class="bant-row" id="bant4">
+              <span class="bant-label">Timeline</span>
+              <div class="bant-bar"><div class="bant-fill timeline" id="bantFill4"></div></div>
+              <span class="bant-val">78</span>
+            </div>
+          </div>
+        </div>
+        <div class="tags" id="tagsContainer">
+          <div class="tag" id="tag1">Planta de emergencia</div>
+          <div class="tag" id="tag2">Industrial / Cementero</div>
+          <div class="tag" id="tag3">800–1,600 kW</div>
+          <div class="tag" id="tag4">Nuevo cliente</div>
+          <div class="tag" id="tag5">Alta prioridad</div>
+          <div class="tag" id="tag6">Zona Norte</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- STEP 4: ROUTING -->
+    <div class="step-card" id="step4">
+      <div class="step-header">
+        <div class="step-icon routing">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+        </div>
+        <div>
+          <div class="step-num">Paso 04</div>
+          <div class="step-title">Asignación Inteligente</div>
+        </div>
+        <div class="step-status waiting" id="step4Status">Esperando</div>
+      </div>
+      <div class="step-body">
+        <div class="terminal" id="term4">
+          <div class="terminal-line" id="t4l1"><span class="cmd">▸</span> Analizando equipo comercial disponible...</div>
+          <div class="terminal-line" id="t4l2"><span class="cmd">▸</span> Cruzando: especialidad × zona × carga de trabajo × historial</div>
+          <div class="terminal-line" id="t4l3"><span class="ok">✓</span> Match óptimo encontrado — confianza <span class="val">94%</span></div>
+        </div>
+        <div class="seller-card recommended" id="seller1">
+          <div class="seller-avatar">RD</div>
+          <div class="seller-info">
+            <div class="seller-name">Ing. Roberto Díaz Garza</div>
+            <div class="seller-detail">Especialista en plantas industriales · Zona Noreste<br>3 oportunidades activas en sector cementero · 78% cuota alcanzada</div>
+          </div>
+          <div class="seller-badge">Recomendado</div>
+        </div>
+        <div class="seller-card" id="seller2">
+          <div class="seller-avatar">PV</div>
+          <div class="seller-info">
+            <div class="seller-name">Ing. Patricia Vega López</div>
+            <div class="seller-detail">Especialista en energía industrial · Zona Norte<br>5 oportunidades activas · 60% cuota alcanzada</div>
+          </div>
+          <div class="seller-badge">Alternativa</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- STEP 5: BRIEF -->
+    <div class="step-card" id="step5">
+      <div class="step-header">
+        <div class="step-icon brief">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+        </div>
+        <div>
+          <div class="step-num">Paso 05</div>
+          <div class="step-title">Brief Automático del Prospecto</div>
+        </div>
+        <div class="step-status waiting" id="step5Status">Esperando</div>
+      </div>
+      <div class="step-body">
+        <div class="terminal" id="term5">
+          <div class="terminal-line" id="t5l1"><span class="cmd">▸</span> Generando brief ejecutivo con contexto enriquecido...</div>
+          <div class="terminal-line" id="t5l2"><span class="cmd">▸</span> Buscando deals similares ganados en histórico...</div>
+          <div class="terminal-line" id="t5l3"><span class="ok">✓</span> Brief generado — <span class="val">listo para envío</span></div>
+        </div>
+        <div class="brief-doc" id="briefDoc">
+          <div class="brief-section">
+            <div class="brief-section-title">Snapshot de Empresa</div>
+            <div class="brief-text">
+              <strong>Grupo Cementos del Norte S.A. de C.V.</strong> — Empresa cementera con sede en Monterrey, N.L.
+              Facturación estimada de <strong>$2,800 MDP anuales</strong>, 3 plantas de producción, +450 empleados.
+              Sector construcción/cementero. Operación continua 24/7 — <strong>infraestructura de energía es misión crítica</strong>.
+            </div>
+          </div>
+          <div class="brief-section">
+            <div class="brief-section-title">Productos Recomendados</div>
+            <div>
+              <span class="brief-product">Planta Volvo Penta 800-1,600 kW</span>
+              <span class="brief-product">UPS industrial</span>
+              <span class="brief-product">Mantenimiento preventivo</span>
+              <span class="brief-product">Contrato de servicio 24/7</span>
+            </div>
+          </div>
+          <div class="brief-section">
+            <div class="brief-section-title">Estrategia Sugerida</div>
+            <div class="brief-text">
+              Contacto es <strong>Director de Operaciones (decisor)</strong>. Enfatizar: experiencia IGSA en sector cementero,
+              certificaciones C UL US, capacidad de diseño e instalación integral. Mencionar caso de éxito con
+              <strong>Cementos Moctezuma</strong> (planta similar 1,200 kW instalada en 2024).
+              Ofrecer visita técnica a planta del cliente para dimensionar solución.
+            </div>
+          </div>
+          <div class="brief-section">
+            <div class="brief-section-title">Deals Similares Ganados</div>
+            <div class="brief-text">
+              • <strong>Cementos Moctezuma</strong> — Planta Volvo Penta 1,200 kW · $4.2M MXN · Cerrado Oct 2024<br>
+              • <strong>Holcim México</strong> — 2× plantas emergencia 800 kW · $6.8M MXN · Cerrado Mar 2024<br>
+              • <strong>GCC Cemento</strong> — Planta + contrato mantenimiento 5 años · $8.1M MXN · Cerrado Ago 2023
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- STEP 6: ACTIONS -->
+    <div class="step-card" id="step6">
+      <div class="step-header">
+        <div class="step-icon actions">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+        </div>
+        <div>
+          <div class="step-num">Paso 06</div>
+          <div class="step-title">Acciones Ejecutadas</div>
+        </div>
+        <div class="step-status waiting" id="step6Status">Esperando</div>
+      </div>
+      <div class="step-body">
+        <div class="action-list" id="actionList">
+          <div class="action-item" id="act1">
+            <div class="action-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></div>
+            <span class="action-text">Prospecto registrado en CRM con datos enriquecidos</span>
+            <span class="action-time">0:04</span>
+          </div>
+          <div class="action-item" id="act2">
+            <div class="action-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></div>
+            <span class="action-text">Brief ejecutivo enviado a Ing. Roberto Díaz</span>
+            <span class="action-time">0:05</span>
+          </div>
+          <div class="action-item" id="act3">
+            <div class="action-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></div>
+            <span class="action-text">Notificación al Director Comercial con resumen y scoring</span>
+            <span class="action-time">0:05</span>
+          </div>
+          <div class="action-item" id="act4">
+            <div class="action-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></div>
+            <span class="action-text">Follow-up automático agendado a 48 hrs</span>
+            <span class="action-time">0:06</span>
+          </div>
+          <div class="action-item" id="act5">
+            <div class="action-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></div>
+            <span class="action-text">Correo de confirmación enviado al prospecto</span>
+            <span class="action-time">0:07</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</main>
+
+<!-- ── BOTTOM BAR ── -->
+<div class="bottom-bar" id="bottomBar">
+  <div class="metric">
+    <div class="metric-label">Proceso manual</div>
+    <div class="metric-value old">24–48 hrs</div>
+  </div>
+  <div class="metric-divider"></div>
+  <div class="metric">
+    <div class="metric-label">Con Agente IA</div>
+    <div class="metric-value new">~2 min</div>
+  </div>
+  <div class="metric-divider"></div>
+  <div class="metric">
+    <div class="metric-label">Reducción de tiempo</div>
+    <div class="metric-value improvement">99.7%</div>
+  </div>
+  <div class="metric-divider"></div>
+  <div class="metric">
+    <div class="metric-label">Datos enriquecidos</div>
+    <div class="metric-value improvement">+6 campos</div>
+  </div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════
+// DEMO ORCHESTRATOR
+// ═══════════════════════════════════════════
+
+let demoRunning = false;
+let timeouts = [];
+
+function clearAllTimeouts() {
+  timeouts.forEach(t => clearTimeout(t));
+  timeouts = [];
+}
+
+function wait(ms) {
+  return new Promise(resolve => {
+    const t = setTimeout(resolve, ms);
+    timeouts.push(t);
+  });
+}
+
+function showTerminalLine(id) {
+  const el = document.getElementById(id);
+  if (el) el.classList.add('show');
+}
+
+function setStatus(id, state) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.className = 'step-status ' + state;
+  el.textContent = state === 'running' ? 'Procesando...' : state === 'done' ? 'Completado' : 'Esperando';
+}
+
+function setCardState(id, state) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.classList.remove('processing', 'complete');
+  if (state) el.classList.add(state);
+}
+
+function activateManualStep(n) {
+  for (let i = 1; i <= 5; i++) {
+    const ms = document.getElementById('ms' + i);
+    if (!ms) continue;
+    ms.classList.remove('active', 'done');
+    if (i < n) ms.classList.add('done');
+    if (i === n) ms.classList.add('active');
+  }
+}
+
+function animateScore(target) {
+  let current = 0;
+  const el = document.getElementById('scoreNum');
+  const interval = setInterval(() => {
+    current += 1;
+    if (current >= target) { current = target; clearInterval(interval); }
+    el.textContent = current;
+  }, 18);
+}
+
+async function startDemo() {
+  if (demoRunning) return;
+  demoRunning = true;
+
+  document.getElementById('startOverlay').classList.add('hidden');
+  document.getElementById('agentStatus').textContent = 'Agente activo';
+  document.getElementById('agentStatus').style.cssText = '';
+
+  const panel = document.getElementById('agentPanel');
+  panel.scrollTop = 0;
+
+  // ── STEP 1: DETECTION ──
+  await wait(600);
+  activateManualStep(1);
+  const s1 = document.getElementById('step1');
+  s1.classList.add('visible');
+  setStatus('step1Status', 'running');
+  setCardState('step1', 'processing');
+
+  await wait(700);
+  showTerminalLine('t1l1');
+  await wait(600);
+  showTerminalLine('t1l2');
+  await wait(500);
+  showTerminalLine('t1l3');
+  await wait(400);
+
+  const fc = document.getElementById('formCard');
+  fc.style.opacity = '1';
+  fc.style.transform = 'translateY(0)';
+
+  await wait(800);
+  setStatus('step1Status', 'done');
+  setCardState('step1', 'complete');
+  activateManualStep(2);
+
+  // ── STEP 2: ENRICHMENT ──
+  await wait(500);
+  const s2 = document.getElementById('step2');
+  s2.classList.add('visible');
+  s2.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  setStatus('step2Status', 'running');
+  setCardState('step2', 'processing');
+
+  await wait(700);
+  showTerminalLine('t2l1');
+  await wait(900);
+  showTerminalLine('t2l2');
+  await wait(600);
+  showTerminalLine('t2l3');
+  await wait(700);
+  showTerminalLine('t2l4');
+  await wait(800);
+  showTerminalLine('t2l5');
+  await wait(400);
+  showTerminalLine('t2l6');
+
+  await wait(400);
+  document.getElementById('ec1').classList.add('show');
+  await wait(200);
+  document.getElementById('ec2').classList.add('show');
+  await wait(200);
+  document.getElementById('ec3').classList.add('show');
+  await wait(200);
+  document.getElementById('ec4').classList.add('show');
+
+  await wait(600);
+  setStatus('step2Status', 'done');
+  setCardState('step2', 'complete');
+  activateManualStep(3);
+
+  // ── STEP 3: SCORING ──
+  await wait(500);
+  const s3 = document.getElementById('step3');
+  s3.classList.add('visible');
+  s3.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  setStatus('step3Status', 'running');
+  setCardState('step3', 'processing');
+
+  await wait(600);
+  showTerminalLine('t3l1');
+  await wait(700);
+  showTerminalLine('t3l2');
+  await wait(500);
+  showTerminalLine('t3l3');
+  await wait(500);
+  showTerminalLine('t3l4');
+  await wait(500);
+  showTerminalLine('t3l5');
+  await wait(600);
+  showTerminalLine('t3l6');
+
+  await wait(400);
+  const sc = document.getElementById('scoreContainer');
+  sc.style.opacity = '1';
+
+  await wait(200);
+  document.getElementById('scoreCircle').classList.add('animate');
+  animateScore(87);
+
+  await wait(300);
+  const bantData = [
+    { id: 'bant1', fill: 'bantFill1', w: '90%' },
+    { id: 'bant2', fill: 'bantFill2', w: '95%' },
+    { id: 'bant3', fill: 'bantFill3', w: '85%' },
+    { id: 'bant4', fill: 'bantFill4', w: '78%' }
+  ];
+  for (const b of bantData) {
+    document.getElementById(b.id).classList.add('show');
+    await wait(150);
+    document.getElementById(b.fill).style.width = b.w;
+    await wait(100);
+  }
+
+  await wait(300);
+  for (let i = 1; i <= 6; i++) {
+    document.getElementById('tag' + i).classList.add('show');
+    await wait(120);
+  }
+
+  await wait(600);
+  setStatus('step3Status', 'done');
+  setCardState('step3', 'complete');
+  activateManualStep(4);
+
+  // ── STEP 4: ROUTING ──
+  await wait(500);
+  const s4 = document.getElementById('step4');
+  s4.classList.add('visible');
+  s4.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  setStatus('step4Status', 'running');
+  setCardState('step4', 'processing');
+
+  await wait(600);
+  showTerminalLine('t4l1');
+  await wait(800);
+  showTerminalLine('t4l2');
+  await wait(700);
+  showTerminalLine('t4l3');
+
+  await wait(500);
+  document.getElementById('seller1').classList.add('show');
+  await wait(400);
+  document.getElementById('seller2').classList.add('show');
+
+  await wait(700);
+  setStatus('step4Status', 'done');
+  setCardState('step4', 'complete');
+  activateManualStep(5);
+
+  // ── STEP 5: BRIEF ──
+  await wait(500);
+  const s5 = document.getElementById('step5');
+  s5.classList.add('visible');
+  s5.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  setStatus('step5Status', 'running');
+  setCardState('step5', 'processing');
+
+  await wait(600);
+  showTerminalLine('t5l1');
+  await wait(900);
+  showTerminalLine('t5l2');
+  await wait(700);
+  showTerminalLine('t5l3');
+
+  await wait(400);
+  document.getElementById('briefDoc').classList.add('show');
+
+  await wait(1000);
+  setStatus('step5Status', 'done');
+  setCardState('step5', 'complete');
+
+  // ── STEP 6: ACTIONS ──
+  await wait(500);
+  const s6 = document.getElementById('step6');
+  s6.classList.add('visible');
+  s6.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  setStatus('step6Status', 'running');
+  setCardState('step6', 'processing');
+
+  for (let i = 1; i <= 5; i++) {
+    await wait(500);
+    const act = document.getElementById('act' + i);
+    act.classList.add('show');
+    await wait(300);
+    act.classList.add('checked');
+  }
+
+  await wait(600);
+  setStatus('step6Status', 'done');
+  setCardState('step6', 'complete');
+
+  // ── SHOW BOTTOM BAR ──
+  await wait(400);
+  document.getElementById('bottomBar').classList.add('visible');
+
+  // ── UPDATE AGENT STATUS ──
+  const badge = document.getElementById('agentStatus');
+  badge.textContent = 'Proceso completado';
+  badge.style.background = 'rgba(34,197,94,.1)';
+  badge.style.borderColor = 'rgba(34,197,94,.25)';
+  badge.style.color = '#22c55e';
+
+  demoRunning = false;
+}
+
+function restartDemo() {
+  clearAllTimeouts();
+  demoRunning = false;
+
+  // Reset all step cards
+  document.querySelectorAll('.step-card').forEach(el => {
+    el.classList.remove('visible', 'processing', 'complete');
+  });
+
+  // Reset terminal lines
+  document.querySelectorAll('.terminal-line').forEach(el => el.classList.remove('show'));
+
+  // Reset statuses
+  for (let i = 1; i <= 6; i++) setStatus('step' + i + 'Status', 'waiting');
+
+  // Reset form card
+  const fc = document.getElementById('formCard');
+  fc.style.opacity = '0';
+  fc.style.transform = 'translateY(10px)';
+
+  // Reset enrichment cards
+  document.querySelectorAll('.enrich-card').forEach(el => el.classList.remove('show'));
+
+  // Reset score
+  document.getElementById('scoreContainer').style.opacity = '0';
+  document.getElementById('scoreCircle').classList.remove('animate');
+  document.getElementById('scoreNum').textContent = '0';
+
+  // Reset BANT
+  document.querySelectorAll('.bant-row').forEach(el => el.classList.remove('show'));
+  document.querySelectorAll('.bant-fill').forEach(el => el.style.width = '0');
+
+  // Reset tags
+  document.querySelectorAll('.tag').forEach(el => el.classList.remove('show'));
+
+  // Reset sellers
+  document.querySelectorAll('.seller-card').forEach(el => el.classList.remove('show'));
+
+  // Reset brief
+  document.getElementById('briefDoc').classList.remove('show');
+
+  // Reset actions
+  document.querySelectorAll('.action-item').forEach(el => {
+    el.classList.remove('show', 'checked');
+  });
+
+  // Reset bottom bar
+  document.getElementById('bottomBar').classList.remove('visible');
+
+  // Reset manual steps
+  document.querySelectorAll('.manual-step').forEach(el => {
+    el.classList.remove('active', 'done');
+  });
+
+  // Reset header badge
+  const badge = document.getElementById('agentStatus');
+  badge.textContent = 'Agente en espera';
+  badge.style.cssText = '';
+
+  // Show start overlay
+  document.getElementById('startOverlay').classList.remove('hidden');
+}
+</script>
+
+</body>
+</html>
